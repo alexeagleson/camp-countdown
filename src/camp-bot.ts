@@ -4,6 +4,12 @@ import { CronJob } from "cron";
 import { getDepartureDate, getPhrases } from "./notion";
 import { getDaysBetween, pickRandom } from "./utility";
 
+const cronString = process.env.CRON_STRING;
+
+if (!cronString) {
+  throw Error("Please create .env file");
+}
+
 const emojis = [
   [`:bullettrain_front:`, `:cloud:`],
   [`:camping:`, `:coffee:`],
@@ -70,7 +76,7 @@ const sendMessage = async () => {
 };
 
 const bot = new CronJob(
-  "0 9 * * 3",
+  cronString,
   sendMessage,
   null,
   true,
