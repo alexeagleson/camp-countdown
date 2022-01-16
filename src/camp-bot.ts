@@ -1,12 +1,35 @@
 require("dotenv").config();
 import https from "https";
 import { CronJob } from "cron";
+import { getDepartureDate, getPhrases } from "./notion";
+import { getDaysBetween, pickRandom } from "./utility";
 
-const data = JSON.stringify({
-  content: "Buy the milk",
-});
+const getMessage = async (): Promise<string> => {
+  const phrases = await getPhrases();
+  const currentDate = new Date();
+  const campingDate = await getDepartureDate();
 
-const sendMessage = () => {
+  if (!campingDate) {
+    return "Check the departure date in Notion, something is up";
+  }
+
+  const daysUntil = getDaysBetween(currentDate, campingDate);
+  const randomPhrase = pickRandom(phrases);
+
+  if (!randomPhrase) {
+    return "Check the random phrases in Notion, I couldn't find any";
+  }
+
+  return `Only ${daysUntil} more days until ${randomPhrase}`;
+};
+
+const sendMessage = async () => {
+  const message = await getMessage();
+
+  const payload = JSON.stringify({
+    content: message,
+  });
+
   const req = https.request(
     {
       hostname: "discord.com",
@@ -15,7 +38,7 @@ const sendMessage = () => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Content-Length": data.length,
+        "Content-Length": payload.length,
       },
     },
     (res) => {
@@ -31,11 +54,11 @@ const sendMessage = () => {
     console.error(error);
   });
 
-  req.write(data);
+  req.write(payload);
   req.end();
 };
 
-var bot = new CronJob(
+const bot = new CronJob(
   "* * * * * *",
   sendMessage,
   null,
