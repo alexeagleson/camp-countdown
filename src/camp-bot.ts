@@ -70,7 +70,7 @@ const sendMessage = async () => {
 };
 
 const bot = new CronJob(
-  "* * * * * *",
+  "0 9 * * 3",
   sendMessage,
   null,
   true,
