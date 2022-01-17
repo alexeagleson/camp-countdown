@@ -5,10 +5,23 @@ import { getDepartureDate, getPhrases } from "./notion";
 import { getDaysBetween, pickRandom } from "./utility";
 
 const cronString = process.env.CRON_STRING;
+const botUrl =
+  process.env.BOT_MODE === "REAL"
+    ? process.env.REAL_DISCORD_BOT_URL
+    : process.env.TEST_DISCORD_BOT_URL;
 
-if (!cronString) {
+if (!cronString || !botUrl) {
   throw Error("Please create .env file");
 }
+
+const callouts = [
+  "Guess what?",
+  "Hey!",
+  "Oh my!",
+  "Get your camp pants ready!",
+  "Good news everyone!",
+  "Here's the thing.",
+] as const;
 
 const emojis = [
   [`:bullettrain_front:`, `:cloud:`],
@@ -29,15 +42,17 @@ const getMessage = async (): Promise<string> => {
   }
 
   const daysUntil = getDaysBetween(currentDate, campingDate);
-  const randomPhrase = pickRandom(phrases);
+  const randomPhrase1 = pickRandom(phrases);
+  const randomPhrase2 = pickRandom(phrases.filter((p) => p !== randomPhrase1));
+  const randomCallout = pickRandom(callouts)
 
-  if (!randomPhrase) {
-    return "Check the random phrases in Notion, I couldn't find any";
+  if (!randomPhrase1 || !randomPhrase2) {
+    return "Check the random phrases in Notion, I couldn't find at least two";
   }
 
   const [emoji1, emoji2] = pickRandom(emojis)!;
 
-  return `${emoji1}  Only ${daysUntil} more days until ${randomPhrase}  ${emoji2}`;
+  return `${emoji1}  ${randomCallout} Only ${daysUntil} more days until ${randomPhrase1}, and ${randomPhrase2}  ${emoji2}`;
 };
 
 const sendMessage = async () => {
@@ -51,7 +66,7 @@ const sendMessage = async () => {
     {
       hostname: "discord.com",
       port: 443,
-      path: process.env.DISCORD_BOT_URL,
+      path: botUrl,
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -75,12 +90,6 @@ const sendMessage = async () => {
   req.end();
 };
 
-const bot = new CronJob(
-  cronString,
-  sendMessage,
-  null,
-  true,
-  "America/Toronto"
-);
+const bot = new CronJob(cronString, sendMessage, null, true, "America/Toronto");
 
 bot.start();
