@@ -16,11 +16,9 @@ if (!cronString || !botUrl) {
 
 const callouts = [
   "Guess what?",
-  "Hey!",
-  "Oh my!",
+  "Hey everybody!",
   "Get your camp pants ready!",
   "Good news everyone!",
-  "Here's the thing.",
 ] as const;
 
 const emojis = [
@@ -44,7 +42,7 @@ const getMessage = async (): Promise<string> => {
   const daysUntil = getDaysBetween(currentDate, campingDate);
   const randomPhrase1 = pickRandom(phrases);
   const randomPhrase2 = pickRandom(phrases.filter((p) => p !== randomPhrase1));
-  const randomCallout = pickRandom(callouts)
+  const randomCallout = pickRandom(callouts);
 
   if (!randomPhrase1 || !randomPhrase2) {
     return "Check the random phrases in Notion, I couldn't find at least two";
@@ -52,7 +50,9 @@ const getMessage = async (): Promise<string> => {
 
   const [emoji1, emoji2] = pickRandom(emojis)!;
 
-  return `${emoji1}  ${randomCallout} Only ${daysUntil} more days until ${randomPhrase1}, and ${randomPhrase2}  ${emoji2}`;
+  const weeksUntil = Math.floor(daysUntil / 7)
+
+  return `${emoji1}  ${randomCallout} Only ${daysUntil} more days until ${randomPhrase1}.  That's just ${weeksUntil} weeks until ${randomPhrase2}!  ${emoji2}`;
 };
 
 const sendMessage = async () => {
